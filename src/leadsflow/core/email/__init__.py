@@ -1,0 +1,1 @@
+# This file makes the email directory a Python package 

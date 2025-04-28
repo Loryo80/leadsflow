@@ -1,0 +1,36 @@
+# Environment variables
+.env
+
+# Python cache and bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Logs
+*.log
+
+# Cache directories
+cache/
+.cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE directories
+.idea/
+.vscode/
+
+# Streamlit specific (optional, add if needed)
+# .streamlit/secrets.toml
