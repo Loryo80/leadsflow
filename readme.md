@@ -151,6 +151,6 @@ The application accepts Excel files (.xlsx or .xls) with any column structure, a
 
 - The email validation performs format checks and DNS MX record verification
 - Company extraction is based on domain analysis and may require manual review
-- Email generation requires an OpenAI API key (GPT-3.5-turbo or GPT-4 family models)
+- Email generation requires an OpenAI API key (GPT-4.& family models)
 - The application handles rate limiting for both API calls and email sending
 - All data is processed locally, ensuring your lead data never leaves your system
