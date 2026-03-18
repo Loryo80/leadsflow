@@ -1,156 +1,158 @@
-# Lead Processing Workflow Application
+# LeadsFlow
 
-This Streamlit application provides a comprehensive workflow for processing B2B sales leads through three independent, cacheable steps:
+> B2B lead processing pipeline: email validation, AI-powered content generation, and automated SMTP sending — built with Streamlit.
 
-1. **Email Validation & Company Extraction** - Clean your data by validating emails and extracting company information
-2. **Email Content Generation** - Create personalized email content using AI-driven templates
-3. **Email Sending** - Send emails via SMTP in a controlled, batched manner
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.25+-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-412991?logo=openai&logoColor=white)](https://openai.com)
 
-## Features
+---
 
-- **Modular Design** - Each step can be run independently with caching between steps
-- **Efficient Processing** - Optimized for large datasets (up to 50,000 records) with multi-threading and batching
-- **Resume Capability** - Pick up where you left off even with large datasets
-- **Company Extraction** - Automatically extract company names from email domains
-- **AI-Powered Content** - Generate personalized emails using templates and OpenAI GPT integration
-- **Controlled Sending** - Send via SMTP with rate limiting and tracking
-- **Multi-language Support** - Generate emails in multiple languages (English, French, Spanish, German, Arabic, Chinese)
+## What It Does
 
-## Installation
+Process B2B sales leads through a **3-step modular workflow**, each step independent and cacheable:
 
-1. Clone this repository
-2. Install required dependencies:
+1. **Validate** — Check email formats, verify DNS MX records, filter generic addresses, extract company names
+2. **Generate** — Create personalized email content using OpenAI GPT with customizable templates in 6 languages
+3. **Send** — Deliver emails via SMTP with rate limiting, batching, and delivery tracking
+
+---
+
+## Key Features
+
+- **Email Validation** — Format check, DNS MX verification, generic address filtering (admin@, info@, etc.), duplicate detection
+- **Company Extraction** — Automatic company name extraction from email domains
+- **AI Content Generation** — OpenAI GPT-powered personalized emails with template variable system
+- **6 Languages** — English, French, Spanish, German, Arabic, Chinese
+- **4 Built-in Templates** — Introduction, Follow-up, Event Invitation, Case Study (+ custom templates)
+- **Template Variables** — `{{firstName}}`, `{{company}}`, `{{jobTitle}}`, `{{product}}`, and more
+- **SMTP Integration** — Gmail, Outlook, Yahoo, and custom SMTP servers
+- **Rate Limiting** — Configurable delays (1-60s) between emails to avoid spam filters
+- **Batch Processing** — Configurable batch sizes for memory-efficient processing of large datasets (100MB+)
+- **Multi-Threading** — Up to 10 workers for validation, 5 for generation
+- **Caching System** — Results saved as Excel files with metadata, supports resume from any step
+- **Test Mode** — Save to drafts instead of sending
+
+---
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| UI | Streamlit 1.25+ |
+| AI | OpenAI GPT API |
+| Email | SMTP (smtplib), rate-limited sending |
+| Validation | dnspython (MX records), tldextract (domain parsing) |
+| Data | pandas, openpyxl (Excel I/O) |
+| Models | Pydantic 2.0+ (data validation) |
+
+---
+
+## Quick Start
+
+### Installation
 
 ```bash
+git clone https://github.com/Loryo80/leadsflow.git
+cd leadsflow
 pip install -r requirements.txt
 ```
 
-3. Set up your OpenAI API key (for email generation):
-   - Create a `.streamlit/secrets.toml` file with:
-   ```
-   OPENAI_API_KEY = "your-api-key-here"
-   ```
-   - Or set it as an environment variable:
-   ```
-   export OPENAI_API_KEY="your-api-key-here"
-   ```
+### Configuration
 
-4. For email sending, configure your SMTP settings in a `.env` file:
-   ```
-   SMTP_SERVER=smtp.gmail.com
-   SMTP_PORT=465
-   SMTP_USERNAME=your-email@gmail.com
-   SMTP_PASSWORD=your-app-password
-   SMTP_FROM_EMAIL=your-email@gmail.com
-   SMTP_USE_SSL=True
-   ```
+```bash
+# 1. OpenAI API key (create .streamlit/secrets.toml)
+mkdir -p .streamlit
+echo 'OPENAI_API_KEY = "sk-..."' > .streamlit/secrets.toml
 
-## Usage
+# 2. SMTP credentials (create .env from example)
+cp .env.example .env
+# Edit .env with your email provider settings
+```
 
-1. Start the Streamlit application:
+**SMTP Examples:**
+
+| Provider | Server | Port | SSL |
+|----------|--------|------|-----|
+| Gmail | smtp.gmail.com | 587 | No (STARTTLS) |
+| Outlook | smtp.office365.com | 587 | No (STARTTLS) |
+| Yahoo | smtp.mail.yahoo.com | 465 | Yes |
+
+> Gmail requires an [App Password](https://support.google.com/accounts/answer/185833), not your regular password.
+
+### Run
 
 ```bash
 streamlit run app.py
 ```
 
-2. Navigate through each step using the sidebar.
+---
+
+## Workflow
 
 ### Step 1: Email Validation
 
-- Upload your Excel file containing contact information
-- Select the email column
-- Run validation to check email validity and extract company names
-- Review results and proceed to step 2
+Upload an Excel file with email addresses. The system validates format, checks DNS MX records, filters generic addresses, extracts company names, and removes duplicates.
+
+**Output:** `cache/step1_TIMESTAMP.xlsx`
 
 ### Step 2: Email Content Generation
 
-- Select validated data from step 1
-- Configure email template and sender information
-- Choose your preferred language
-- Generate personalized email content for each valid contact
-- Review sample emails and proceed to step 3
+Loads validated data from Step 1. Select a template, choose target language (6 supported), fill sender info. OpenAI generates personalized subject + body for each lead.
+
+**Output:** `cache/step2_TIMESTAMP.xlsx`
 
 ### Step 3: Email Sending
 
-- Select generated content from step 2
-- Configure SMTP settings
-- Choose sending options (batching, delays, daily limits)
-- Select sending method (all, by company, or by batch)
-- Send emails via SMTP
-- Monitor sending progress and review results
+Loads generated content from Step 2. Sends via SMTP in configurable batches with random delays. Tracks delivery status. Supports test mode (drafts only).
 
-## Architecture
+**Output:** `cache/step3_TIMESTAMP.xlsx` with delivery status log.
 
-The application is built with a modular architecture within the `src/leadsflow` package:
+---
 
-- `app.py` - Main application entry point (root level).
-- `app_settings.py` - Configuration management and defaults (root level).
-- `settings.py` - Streamlit UI for the settings page (root level).
+## Project Structure
 
-- `src/leadsflow/`
-  - `__init__.py`
-  - `utils.py` - Utility functions for logging, file handling, etc.
-  - `core/` - Core application logic.
-    - `__init__.py`
-    - `config/`
-      - `__init__.py`
-      - `env_loader.py` - Environment variables management.
-    - `email/`
-      - `__init__.py`
-      - `placeholder_checker.py` - Checks and replaces template variables.
-      - `smtp_sender.py` - SMTP email sending implementation.
-      - `templates.py` - Email template loading, saving, rendering (and UI components).
-    - `llm/`
-      - `__init__.py`
-      - `generator.py` - OpenAI integration for personalized content generation.
-  - `steps/` - Modules for each workflow step.
-    - `__init__.py`
-    - `validation.py` - Step 1: Email validation and company extraction.
-    - `generation.py` - Step 2: Email content generation using templates and LLM.
-    - `sending.py` - Step 3: Email sending via SMTP.
+```
+leadsflow/
+├── app.py                    # Main Streamlit entry point
+├── settings.py               # Settings UI page
+├── app_settings.py           # Configuration defaults
+├── src/leadsflow/
+│   ├── core/
+│   │   ├── config/           # SMTP config from .env
+│   │   ├── email/            # SMTP sender, templates, placeholders
+│   │   └── llm/              # OpenAI integration
+│   ├── steps/
+│   │   ├── validation.py     # Step 1
+│   │   ├── generation.py     # Step 2
+│   │   └── sending.py        # Step 3
+│   └── utils.py
+├── cache/                    # Auto-created, stores step results
+└── tests/
+```
 
-- `tests/` - Contains test scripts (e.g., `test_email.py`).
-- `cache/` - Stores cached data from workflow steps.
-- `templates/` - Stores user-defined JSON email templates.
-
-## Data Flow
-
-The application maintains a cache of processed data at each step, making it efficient for large datasets:
-
-1. Raw data → Validated data (step1_*.xlsx)
-2. Validated data → Generated content (step2_*.xlsx)
-3. Generated content → Sending results (step3_*.xlsx)
-
-## Tips for Large Datasets
-
-- **Batch Processing**: The app processes data in batches to manage memory usage
-- **Resume Capability**: If a step is interrupted, you can resume from the last saved state
-- **Separate Processing**: Run each step when convenient - validate all contacts first, then generate content later
-- **Company Filtering**: In the sending step, you can choose to send emails company by company
+---
 
 ## Input Format
 
-The application accepts Excel files (.xlsx or .xls) with any column structure, as long as one column contains email addresses. The typical format might include:
+Excel file (`.xlsx`) with at minimum an `email` column. Optional columns:
 
-- First Name
-- Last Name
-- Email Address
-- Job Title
-- Company
-- etc.
+| Column | Required | Description |
+|--------|----------|-------------|
+| email | Yes | Email address |
+| firstName | No | Contact first name |
+| lastName | No | Contact last name |
+| company | No | Company name (auto-extracted if missing) |
+| jobTitle | No | Contact job title |
 
-## Requirements
+---
 
-- Python 3.7+
-- Streamlit
-- Pandas & OpenPyxl (for Excel handling)
-- OpenAI Python SDK (for content generation)
-- SMTP server access (for email sending)
+## License
 
-## Notes
+MIT
 
-- The email validation performs format checks and DNS MX record verification
-- Company extraction is based on domain analysis and may require manual review
-- Email generation requires an OpenAI API key (GPT-4.& family models)
-- The application handles rate limiting for both API calls and email sending
-- All data is processed locally, ensuring your lead data never leaves your system
+## Author
+
+**Yassine Senhaji** — AI Solution Architect
+- [www.digitalsy.ma](https://www.digitalsy.ma/)
+- [github.com/Loryo80](https://github.com/Loryo80)
